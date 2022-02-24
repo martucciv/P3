@@ -3,22 +3,10 @@ package org.example;
 * COP3503 Spring 2022
 * P3: Destroying Connectivity
 */
-import java.util.Map;
+import java.util.Arrays;
 import java.util.Scanner;
-import java.util.TreeMap;
 
 public class destroy {
-
-    final public static int MAX = 100000;
-    public int[] parent;
-
-    public destroy(int n){
-
-        parent = new int[MAX];
-        for(int i = 0; i < n; i++) {
-            parent[i] = i;
-        }
-    }
 
     public static void main(String[] args){
 
@@ -28,81 +16,125 @@ public class destroy {
 
         //create the individual sets
         numComputers = stdin.nextInt();
-        destroy d = new destroy(numComputers);
+
+        //create disjoint object
+        djSet djSet = new djSet(numComputers);
 
         numConnections = stdin.nextInt();
         numDestroy = stdin.nextInt();
 
-        //loop through the number of connections and connect them
-        for(int i = 0; i < numConnections; i++){
+        int[][] connections = new int[numConnections + 1][2];
+        //store the connections in an array. Index 0 will be empty and start filling array at index 1
+        for(int i = 1; i <= numConnections; i++){
 
-            int v1 = stdin.nextInt();
-            int v2 = stdin.nextInt();
-            d.union(v1, v2);
+            connections[i][0] = stdin.nextInt();
+            connections[i][1] = stdin.nextInt();
         }
 
-        //get the original connectivity of the network
-        int[] connectivity = new int[numDestroy + 1];
-        connectivity[0] = d.calculateConnectivity();
+        //create boolean array
+        boolean[] bool = new boolean[numConnections + 1];
 
-        //loop through the numbers to destroy and break the connection
-        for(int i = 1; i <= numDestroy; i++){
-            int destroy = stdin.nextInt();
-            d.unconnect(destroy);
-            connectivity[i] = d.calculateConnectivity();
+        //set all indexes in boolean arr to true
+        Arrays.fill(bool, true);
+
+        int[] destroy = new int[numDestroy + 1];
+        //store the pairs to destroy in destroy[] and change that index of bool[] to false
+        for(int i = 0; i < numDestroy; i++){
+
+            destroy[i] = stdin.nextInt();
+            bool[destroy[i]] = false;
         }
 
-        //print
-        d.print(numDestroy, connectivity);
+        //union all of the connections after all the destruction
+        for(int i = 1; i <= numConnections; i++){
+
+            //if bool[i] == true, union
+            if(bool[i]){
+
+                int v1 = connections[i][0];
+                int v2 = connections[i][1];
+                djSet.union(v1, v2);
+            }
+        }
+
+
+        long[] connectivity = new long[numDestroy + 2];
+        //Store the last connectivity after all destruction in the last index of the array
+        connectivity[numDestroy + 1] = calculateConnectivity(numComputers);
+
+        //start at end of destroy[] array and union each destroy connection one at a time, calculating
+        //the connectivity after each union
+        for(int i = numDestroy; i>= 0; i--){
+
+            int idx = destroy[i];
+            bool[idx] = true;
+
+            int v1 = connections[idx][0];
+            int v2 = connections[idx][1];
+            djSet.union(v1, v2);
+            connectivity[i] = calculateConnectivity(numComputers);
+        }
+
+        //print each connectivity
+        print(numDestroy, connectivity);
     }
 
     //calculate the total connectivity and return the result
-    private int calculateConnectivity() {
+    public static int calculateConnectivity(int numComputers) {
 
-        TreeMap<Integer, Integer> sets = new TreeMap<>();
-
-        int val = 1;
+        int[] freq= new int[numComputers];
 
         //loop the number of computers and mark each time a root is used to know how many times a root is used
-        for(int i = 0; i < parent.length; i++){
+        for(int i = 0; i < numComputers; i++) {
 
-            //if the key doesn't exist, create it, and set the val to 1
-            if(!sets.containsKey(parent[i])){
-
-                sets.put(i, val);
-            }
-            //if key exists, increase the val count by 1
-            else{
-                sets.replace(parent[i], val++);
-            }
+            freq[djSet.find(i)]++;
         }
 
         int res = 0;
 
-        //loop through the TreeMap and calculate the result
-        for(Map.Entry<Integer, Integer> entry : sets.entrySet()){
+        //loop through the array and calculate the result
+        for(int i = 0; i < numComputers; i++){
+            res += Math.pow(freq[i], 2);
 
-           res += Math.pow(entry.getValue(), 2);
         }
 
         return res;
     }
 
-    //Connect the two roots
-    private void union(int v1, int v2) {
+    //print the connectivity
+    public static void print(int numDestroy, long[] connectivity){
 
-        //find the roots
-        int root1 = find(v1);
-        int root2 = find(v2);
+        for(int i = 0; i < numDestroy + 1; i++){
+            System.out.println(connectivity[i]);
+        }
+    }
+}
 
-        //attach v2 to t1
-        if(root1 != root2){
-            parent[root2] = root1;
+class djSet{
+
+    public static int[] parent;
+    public static long[] size;
+    public static long sumSq;
+    final public int MAX = 100000;
+
+    public djSet(int n){
+
+        parent = new int[MAX];
+        for(int i = 0; i < n; i++) {
+            parent[i] = i;
         }
     }
 
+//    public long getSumSq(){
+//        return sumSq;
+//    }
+//
+//    void setSumSq(long sumSq){
+//        this.sumSq = sumSq;
+//    }
+
     //Find the root of the tree
-    private int find(int v) {
+    public static int find(int v) {
 
         //at root of tree
         if(parent[v] == v){
@@ -117,18 +149,26 @@ public class destroy {
         return root;
     }
 
-    //break the link between a num and the set
-    private void unconnect(int v){
+    //Connect the two roots
+    public static void union(int v1, int v2) {
 
+        //find the roots
+        int root1 = find(v1);
+        int root2 = find(v2);
 
+        //attach v2 to v1
+        if(root1 != root2){
 
-    }
-
-    //print the connectivity
-    private void print(int numDestroy, int[] connectivity){
-
-        for(int i = 0; i < numDestroy + 1; i++){
-            System.out.println(connectivity[i]);
+            parent[root2] = root1;
+            //increase size
+//            size[root1] ++;
         }
+
+//        calculateConnectivity();
     }
+
+    //calculate the total connectivity and return the result
+//    public static void calculateConnectivity(){
+//
+//    }
 }
