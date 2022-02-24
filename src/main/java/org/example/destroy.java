@@ -57,7 +57,6 @@ public class destroy {
             }
         }
 
-
         long[] connectivity = new long[numDestroy + 2];
         //Store the last connectivity after all destruction in the last index of the array
         connectivity[numDestroy + 1] = calculateConnectivity(numComputers);
@@ -95,7 +94,6 @@ public class destroy {
         //loop through the array and calculate the result
         for(int i = 0; i < numComputers; i++){
             res += Math.pow(freq[i], 2);
-
         }
 
         return res;
@@ -113,8 +111,6 @@ public class destroy {
 class djSet{
 
     public static int[] parent;
-    public static long[] size;
-    public static long sumSq;
     final public int MAX = 100000;
 
     public djSet(int n){
@@ -124,14 +120,6 @@ class djSet{
             parent[i] = i;
         }
     }
-
-//    public long getSumSq(){
-//        return sumSq;
-//    }
-//
-//    void setSumSq(long sumSq){
-//        this.sumSq = sumSq;
-//    }
 
     //Find the root of the tree
     public static int find(int v) {
@@ -150,7 +138,7 @@ class djSet{
     }
 
     //Connect the two roots
-    public static void union(int v1, int v2) {
+    public void union(int v1, int v2) {
 
         //find the roots
         int root1 = find(v1);
@@ -160,15 +148,6 @@ class djSet{
         if(root1 != root2){
 
             parent[root2] = root1;
-            //increase size
-//            size[root1] ++;
         }
-
-//        calculateConnectivity();
     }
-
-    //calculate the total connectivity and return the result
-//    public static void calculateConnectivity(){
-//
-//    }
 }
